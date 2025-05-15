@@ -5,92 +5,159 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using LeiaUnity;
 
+/// <summary>
+/// Manages the UI components and settings for the game
+/// Handles 3D display toggle, audio settings, and menu navigation
+/// </summary>
 public class UI_Manager : MonoBehaviour
 {
-    public LeiaDisplay display;
-    public Button BT_Option;
-    public Button BT_Exit;
-    public Button BT_Restart;
-    public Button BT_Close;
-    public Toggle BT_3D;
-    public Toggle BT_BGM_Sound;
-    public Slider Slider_BGM_Sound;
-    
-    public DoTEffect Setting_Effect;    //setting에 사용할 효과
-     Audio_Manager audioManager;
+    [Header("Leia Display")]
+    [SerializeField] private LeiaDisplay leiaDisplay;
 
-    public GameObject Option_Panel;
+    [Header("UI Buttons")]
+    [SerializeField] private Button optionButton;
+    [SerializeField] private Button exitButton;
+    [SerializeField] private Button restartButton;
+    [SerializeField] private Button closeButton;
 
+    [Header("Settings Controls")]
+    [SerializeField] private Toggle toggle3D;
+    [SerializeField] private Toggle toggleBgmSound;
+    [SerializeField] private Slider sliderBgmSound;
 
-    bool is3D = true;
-    bool isMute = false;
+    [Header("UI Elements")]
+    [SerializeField] private GameObject optionPanel;
+    [SerializeField] private DoTEffect settingEffect;
 
-    void Awake()
+    private Audio_Manager audioManager;
+    private bool is3DEnabled = true;
+    private bool isMuted = false;
+
+    private void Awake()
     {
-        audioManager = FindAnyObjectByType<Audio_Manager>();
+        // Find audio manager once and cache it
+        audioManager = FindObjectOfType<Audio_Manager>();
 
-        audioManager.Current_BGM_Volume = Slider_BGM_Sound.value;
-        BT_Option.onClick.AddListener(() =>
+        if (audioManager == null)
         {
-            Option_Panel.SetActive(true);
-        });
-        BT_Exit.onClick.AddListener(() =>
-        {
-            Application.Quit();
-        });
-        BT_Restart.onClick.AddListener(() =>
-        {
-            Restart();
-        });
-        BT_Close.onClick.AddListener(() =>
-        {
-            Setting_Effect.EndDoT();
-        });
-        BT_3D.onValueChanged.AddListener((bool value) =>
-        {
-            OnOff3D();
-        });
-        BT_BGM_Sound.onValueChanged.AddListener((bool value) =>
-        {
-            OnOffBGM();
-        });
-        Slider_BGM_Sound.onValueChanged.AddListener((float value) =>
-        {
-            SetBgmVolume();
-        });
+            Debug.LogError("Audio_Manager not found in scene!");
+            return;
+        }
     }
 
-    void Restart()
+    private void Start()
+    {
+        // Initialize audio slider with current volume
+        sliderBgmSound.value = audioManager.Current_BGM_Volume;
+
+        // Setup UI button listeners
+        SetupButtonListeners();
+
+        // Set initial toggle states
+        toggle3D.isOn = is3DEnabled;
+        toggleBgmSound.isOn = isMuted;
+    }
+
+    /// <summary>
+    /// Sets up all the button and UI event listeners
+    /// </summary>
+    private void SetupButtonListeners()
+    {
+        // Button listeners
+        optionButton.onClick.AddListener(OpenOptions);
+        exitButton.onClick.AddListener(ExitGame);
+        restartButton.onClick.AddListener(RestartGame);
+        closeButton.onClick.AddListener(CloseOptions);
+
+        // Toggle listeners
+        toggle3D.onValueChanged.AddListener(OnToggle3D);
+        toggleBgmSound.onValueChanged.AddListener(OnToggleBgmSound);
+
+        // Slider listener
+        sliderBgmSound.onValueChanged.AddListener(OnBgmVolumeChanged);
+    }
+
+    /// <summary>
+    /// Opens the options panel
+    /// </summary>
+    private void OpenOptions()
+    {
+        optionPanel.SetActive(true);
+    }
+
+    /// <summary>
+    /// Closes the options panel with effect
+    /// </summary>
+    private void CloseOptions()
+    {
+        settingEffect.EndDoT();
+    }
+
+    /// <summary>
+    /// Exits the application
+    /// </summary>
+    private void ExitGame()
+    {
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
+#endif
+    }
+
+    /// <summary>
+    /// Restarts the current scene
+    /// </summary>
+    private void RestartGame()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
-    private void OnOff3D()
+
+    /// <summary>
+    /// Handles 3D toggle changes
+    /// </summary>
+    private void OnToggle3D(bool isOn)
     {
-        is3D = !is3D;
-        display.Set3DMode(is3D);
+        is3DEnabled = isOn;
+        leiaDisplay.Set3DMode(is3DEnabled);
     }
 
-    private void OnOffBGM()
+    /// <summary>
+    /// Handles BGM mute toggle changes
+    /// </summary>
+    private void OnToggleBgmSound(bool isMuted)
     {
-        isMute = !isMute;
-        audioManager.SetMute(isMute);
-        if (!isMute)
+        this.isMuted = isMuted;
+        audioManager.SetMute(isMuted);
+
+        // Update slider visibility
+        if (isMuted)
         {
-            Slider_BGM_Sound.value = audioManager.Current_BGM_Volume;
+            sliderBgmSound.value = 0;
         }
-        else { Slider_BGM_Sound.value = 0; }
+        else if (sliderBgmSound.value == 0)
+        {
+            // If unmuting from 0, set to default value
+            sliderBgmSound.value = 0.5f;
+        }
     }
 
-    void SetBgmVolume()
+    /// <summary>
+    /// Handles BGM volume slider changes
+    /// </summary>
+    private void OnBgmVolumeChanged(float value)
     {
-        Audio_Manager.Instance.SetBGMVolume(Slider_BGM_Sound.value);
-        if(Slider_BGM_Sound.value != 0)
+        // Update audio volume
+        if (audioManager != null)
         {
-            BT_BGM_Sound.isOn = false;
+            audioManager.SetBGMVolume(value);
         }
-        else
+
+        // Update mute toggle based on volume
+        bool shouldBeMuted = value <= 0.01f;
+        if (toggleBgmSound.isOn != shouldBeMuted)
         {
-            BT_BGM_Sound.isOn = true;
+            toggleBgmSound.isOn = shouldBeMuted;
         }
     }
 }

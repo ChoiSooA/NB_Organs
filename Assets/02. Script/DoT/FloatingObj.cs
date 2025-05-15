@@ -5,7 +5,6 @@ using DG.Tweening;
 
 public class FloatingObj : MonoBehaviour
 {
-    float floatSpeed = 0.2f;
     public List<GameObject> floatingObj = new List<GameObject>();
 
     private void Start()
