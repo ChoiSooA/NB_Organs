@@ -16,7 +16,7 @@ public class UI_Manager : MonoBehaviour
 
     [Header("UI Buttons")]
     [SerializeField] private Button optionButton;
-    [SerializeField] private Button exitButton;
+    [SerializeField] private Button[] exitButton;
     [SerializeField] private Button restartButton;
     [SerializeField] private Button closeButton;
 
@@ -65,8 +65,11 @@ public class UI_Manager : MonoBehaviour
     {
         // Button listeners
         optionButton.onClick.AddListener(OpenOptions);
-        exitButton.onClick.AddListener(ExitGame);
         restartButton.onClick.AddListener(RestartGame);
+        foreach (Button button in exitButton)
+        {
+            button.onClick.AddListener(ExitGame);
+        }
         closeButton.onClick.AddListener(CloseOptions);
 
         // Toggle listeners

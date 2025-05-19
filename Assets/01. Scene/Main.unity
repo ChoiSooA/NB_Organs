@@ -7448,7 +7448,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7bad8da672ee44d4e91b0582ec163d1f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  nextButton: {fileID: 281210663}
+  nextButton: {fileID: 1066407014}
   startTrueObject: []
   startFalseObject: []
   startEvent:
@@ -10717,7 +10717,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   leiaDisplay: {fileID: 22660221}
   optionButton: {fileID: 695970957}
-  exitButton: {fileID: 530305611}
+  exitButton:
+  - {fileID: 281210663}
+  - {fileID: 530305611}
   restartButton: {fileID: 1849376795}
   closeButton: {fileID: 1742485637}
   toggle3D: {fileID: 569708174}
